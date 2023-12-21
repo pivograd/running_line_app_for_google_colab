@@ -6,7 +6,10 @@ import numpy as np
 from .models import GeneratedText
 
 def generate(request):
-    return render(request, 'running_line_app/generate_running_line.html')
+
+    history_data = GeneratedText.objects.all().order_by('-created_at')
+
+    return render(request, 'running_line_app/generate_running_line.html', {'history_data': history_data })
 
 def generate_running_line(request, text):
 
@@ -38,6 +41,10 @@ def generate_running_line(request, text):
         frame_array = cv2.cvtColor(frame_array, cv2.COLOR_RGB2BGR)
         video_writer.write(frame_array)
     video_writer.release()
+
+    # Записываем данные в таблицу
+    GeneratedText.objects.create(text=text)
+
     # Отдаем видеофайл пользователю для скачивания
     with open(output_file, 'rb') as video_file:
         response = HttpResponse(video_file.read(), content_type='video/mp4')
